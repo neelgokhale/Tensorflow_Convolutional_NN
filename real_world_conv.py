@@ -8,21 +8,23 @@ Built using PyCharm
 # NOTE: this neural network model is run by running the validate.py file. Do not run this file unless required.
 
 import os
-from get_data import train_horse_dir, train_human_dir
+from get_data import train_horse_dir, train_human_dir, val_horse_dir, val_human_dir
 import tensorflow as tf
 from tensorflow.keras.optimizers import RMSprop
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
 # Img directory info
 
+# Training
 train_horse_names = os.listdir(train_horse_dir)
-# print(train_horse_names[:10])
-
 train_human_names = os.listdir(train_human_dir)
-# print(train_human_names[:10])
-
 len_train_horses = len(train_horse_names)
 len_train_humans = len(train_human_names)
+# Validation
+val_horse_names = os.listdir(val_horse_dir)
+val_human_names = os.listdir(val_human_dir)
+len_val_horses = len(val_horse_names)
+len_val_humans = len(val_human_names)
 
 # Model
 
@@ -59,8 +61,12 @@ model.compile(loss='binary_crossentropy',
 # Data preprocessing and image generators
 
 train_datagen = ImageDataGenerator(rescale=1./255)
+val_datagen = ImageDataGenerator(rescale=1./255)
+
 # Training in batches of batch_size = 128 using datagenerator
 train_batch_size = 128
+val_batch_size = 32
+
 train_generator = train_datagen.flow_from_directory(
 
     # Source dir for images
@@ -69,10 +75,18 @@ train_generator = train_datagen.flow_from_directory(
     batch_size=train_batch_size,
     class_mode='binary')
 
+val_generator = val_datagen.flow_from_directory(
+    '/Users/Owner/PycharmProjects/week4_coursera/img/validation-horse-or-human',
+    target_size=(300, 300),
+    batch_size=val_batch_size,
+    class_mode='binary')
+
 # Training
 
 history = model.fit_generator(
     generator=train_generator,
     steps_per_epoch=len_train_horses/train_batch_size,
     epochs=15,
-    verbose=1)
+    verbose=1,
+    validation_data=val_generator,
+    validation_steps=8)
